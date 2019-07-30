@@ -1,0 +1,21 @@
+﻿@model List<AfrimartTenants.Models.Tenant>
+@{
+    ViewBag.Title = "index";
+}
+
+<h2>index</h2>
+
+
+<div>
+
+    <ul>
+        @foreach (var tenant in Model)
+        {
+        <li>@tenant.Name,  @tenant.Domain</li>
+            
+        }
+    </ul>
+
+</div>
+
+ 
