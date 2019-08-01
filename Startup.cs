@@ -38,10 +38,33 @@ namespace AfrimartTenants
 
             Tenant tenant;
 
-            using (var context = new MultiTenantContext())
-            {
-                DbSet<Tenant> tenants = context.Tenants;
-                tenant = tenants.FirstOrDefault(a => a.DomainName.ToLower().Equals(urlHost)) ?? tenants.FirstOrDefault(a => a.Default);
+            //using (var context = new MultiTenantContext())
+            //{
+                string cacheName = "all-tenant-cache-name";
+                int cacheTimeOutSeconds = 30;
+
+                List<Tenant> tenants = (List<Tenant>)HttpContext.Current.Cache.Get(cacheName);
+                if (tenants == null)
+                {
+                    lock (Locker)
+                    {
+                        if (tenants == null)
+                        {
+                        using (var context = new MultiTenantContext())
+                        {
+                            tenants = context.Tenants.ToList();
+                            HttpContext.Current.Cache.Insert(cacheName, tenants, null,
+                                DateTime.Now.Add(new TimeSpan(0, 0, cacheTimeOutSeconds)),
+                                TimeSpan.Zero);                              
+                         }
+                    }
+                }
+        }
+
+
+                tenant = tenants.
+                    FirstOrDefault(a => a.DomainName.ToLower().Equals(urlHost)) ?? 
+                        tenants.FirstOrDefault(a => a.Default);
                 if (tenant == null)
                 {
                     throw new ApplicationException
@@ -49,7 +72,7 @@ namespace AfrimartTenants
                 }
                 return tenant; 
             }                                 
-        }
+        
 
 
     }
